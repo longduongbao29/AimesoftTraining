@@ -4,4 +4,4 @@ WORKDIR /app
 COPY . /app
 RUN pip install fastapi uvicorn requests
 EXPOSE 7000
-CMD ["uvicorn", "service1:app", "--host", "0.0.0.0", "--port", "7000"]
+CMD ["uvicorn", "middle:app", "--host", "0.0.0.0", "--port", "7000"]

@@ -1,15 +1,15 @@
 version: '3'
 services:
-  service1:
+  middle:
     build:
       context: .
       dockerfile: Dockerfile_1
     ports:
-      - "7000:7000" 
+      - "7000:7000"
     depends_on:
-      - service2
+      - endpoint
 
-  service2:
+  endpoint:
     build:
       context: .
       dockerfile: Dockerfile_2
