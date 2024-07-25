@@ -10,7 +10,8 @@ services:
       - "${MIDDLE_HOST_PORT}:${MIDDLE_CONTAINER_PORT}"
     depends_on:
       - endpoint
-
+    env_file:
+      - .env
   endpoint:
     build:
       context: .
@@ -19,3 +20,5 @@ services:
         PORT: ${ENDPOINT_CONTAINER_PORT}
     ports:
       - "${ENDPOINT_HOST_PORT}:${ENDPOINT_CONTAINER_PORT}"
+    env_file:
+      - .env
