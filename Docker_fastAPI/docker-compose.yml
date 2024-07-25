@@ -4,8 +4,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_1
+      args:
+        PORT: ${MIDDLE_CONTAINER_PORT}
     ports:
-      - "7000:7000"
+      - "${MIDDLE_HOST_PORT}:${MIDDLE_CONTAINER_PORT}"
     depends_on:
       - endpoint
 
@@ -13,5 +15,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile_2
+      args:
+        PORT: ${ENDPOINT_CONTAINER_PORT}
     ports:
-      - "7010:7010"
+      - "${ENDPOINT_HOST_PORT}:${ENDPOINT_CONTAINER_PORT}"

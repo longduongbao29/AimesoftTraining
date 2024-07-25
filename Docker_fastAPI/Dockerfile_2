@@ -2,5 +2,10 @@ FROM python:3.9-slim
 WORKDIR /app
 COPY . /app
 RUN pip install fastapi uvicorn requests
-EXPOSE 7010
-CMD ["uvicorn", "endpoint:app", "--host", "0.0.0.0", "--port", "7010"]
+
+ARG PORT=7010 
+ENV PORT=$PORT
+
+EXPOSE $PORT
+
+CMD ["sh", "-c", "uvicorn endpoint:app --host 0.0.0.0 --port $PORT"]
