@@ -1,5 +1,16 @@
 version: '3'
 services:
+  nginx:
+    image: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx-config:/etc/nginx/conf.d
+    depends_on:
+      - middle
+      - endpoint
+    networks:
+      - backend
   middle:
     build:
       context: .
@@ -12,6 +23,8 @@ services:
       - endpoint
     env_file:
       - .env
+    networks:
+      - backend
   endpoint:
     build:
       context: .
@@ -22,3 +35,9 @@ services:
       - "${ENDPOINT_HOST_PORT}:${ENDPOINT_CONTAINER_PORT}"
     env_file:
       - .env
+    networks:
+      - backend
+
+networks:
+  backend:
+    driver: bridge
