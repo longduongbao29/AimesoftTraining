@@ -29,12 +29,12 @@ class TextProcessor:
         return processed_text
 
     def replace_entities(text, entities):
-        for entity in entities:
+        sorted_entities = sorted(entities, key=lambda x: x['start'], reverse=True)
+        for entity in sorted_entities:
             entity_text = entity["word"]
-            if entity_text[0] == "▁":
-                entity_text = entity_text[1:]
-            entity_text = entity_text.replace("▁", " ")
             entity_label = entity["entity"]
-            text = text.replace(entity_text, f"x ({entity_label})")
-            text = text.replace(entity_text[1:], f"x ({entity_label})")
+            start = entity["start"]
+            end = entity["end"]
+            # Thay thế theo vị trí trong văn bản
+            text = text[:start] + f"x ({entity_label})" + text[end:]
         return text
