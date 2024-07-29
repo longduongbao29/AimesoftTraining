@@ -5,7 +5,8 @@ from transformers import pipeline
 class NERModel:
     def __init__(self, model_name="tsmatz/xlm-roberta-ner-japanese"):
         self.classifier = pipeline(model=model_name)
-    def aggregate_span(self,results, text):
+
+    def aggregate_span(self, results, text):
         new_results = []
         current_result = results[0]
 
@@ -36,11 +37,10 @@ class NERModel:
         ret.append(current_result)
         return ret
 
-
     def ner(self, text):
         output = self.classifier(text)
         output = self.aggregate_span(output, text)
-        return {"text": text, "entities": output}
+        return output
 
     def detect_entities(self, text):
         return self.ner(text)

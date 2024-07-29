@@ -28,9 +28,13 @@ class TextProcessor:
 
         return processed_text
 
-    def replace_entities(self, text, entities):
+    def replace_entities(text, entities):
         for entity in entities:
             entity_text = entity["word"]
+            if entity_text[0] == "▁":
+                entity_text = entity_text[1:]
+            entity_text = entity_text.replace("▁", " ")
             entity_label = entity["entity"]
             text = text.replace(entity_text, f"x ({entity_label})")
+            text = text.replace(entity_text[1:], f"x ({entity_label})")
         return text
