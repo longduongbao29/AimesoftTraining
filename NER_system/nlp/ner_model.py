@@ -1,10 +1,16 @@
 # nlp/ner_model.py
-from transformers import pipeline
+from transformers import AutoTokenizer, AutoModelForTokenClassification, pipeline
 
 
 class NERModel:
-    def __init__(self, model_name="tsmatz/xlm-roberta-ner-japanese"):
-        self.classifier = pipeline(model=model_name)
+
+    def __init__(
+        self,
+        model_path="/home/aime/.cache/huggingface/hub/models--tsmatz--xlm-roberta-ner-japanese/snapshots/39c525b11d35426fea754e906c4847208582647f",
+    ):
+        self.tokenizer = AutoTokenizer.from_pretrained(model_path)
+        self.model = AutoModelForTokenClassification.from_pretrained(model_path)
+        self.classifier = pipeline("ner", model=self.model, tokenizer=self.tokenizer)
 
     def aggregate_span(self, results, text):
         if results is None:
