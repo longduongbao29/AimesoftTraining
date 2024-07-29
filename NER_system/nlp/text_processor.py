@@ -5,7 +5,7 @@ from .regex_patterns import RegexPatterns
 
 class TextProcessor:
     def __init__(self):
-        self.ner_model = NERModel()
+        self.ner_model = NERModel(model_path="./app/models")
         self.regex_patterns = RegexPatterns()
 
     def process_text(self, text):
