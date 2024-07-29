@@ -5,7 +5,7 @@ from utils.file_handler import FileHandler
 
 def main():
     # Đọc nội dung từ file
-    input_path = "files/input.txt"
+    input_path = "files/Ner.txt"
     output_path = "files/output.txt"
 
     content = FileHandler.read_file(input_path)
