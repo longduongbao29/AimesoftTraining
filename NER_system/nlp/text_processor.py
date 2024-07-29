@@ -28,8 +28,8 @@ class TextProcessor:
 
         return processed_text
 
-    def replace_entities(text, entities):
-        sorted_entities = sorted(entities, key=lambda x: x['start'], reverse=True)
+    def replace_entities(self, text, entities):
+        sorted_entities = sorted(entities, key=lambda x: x["start"], reverse=True)
         for entity in sorted_entities:
             entity_text = entity["word"]
             entity_label = entity["entity"]

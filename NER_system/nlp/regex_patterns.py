@@ -5,18 +5,20 @@ import re
 class RegexPatterns:
     postal_regex = r"\b\d{3}\s*-\s*\d{4}\b"
     time_regexes = [
-        r"\b\d{1,2}[/-]\d{1,2}[/-]\d{4}\b",
-        r"\b\d{4}[/-]\d{1,2}[/-]\d{1,2}\b",
-        r"\b(?:昭和|平成|令和)\d{1,2}年?\s*\d{1,2}月?\s*\d{1,2}日?\b",
-        r"\b(?:昭|平|令)\d{1,2}\s*(?:\.\d{1,2})?\s*(?:\.\d{1,2})?\b",
+        r"\b(3[01]|[12][0-9]|0?[1-9])(\/|-| )(1[0-2]|0?[1-9])(\/|-| )([0-9]{4})\b",
+        r"\b([0-9]{4})(\/|-| )(1[0-2]|0?[1-9])(\/|-| )(3[01]|[12][0-9]|0?[1-9])\b",
+        r"\b(昭和|平成|令和)([0-9]{1})(年)([0-9]{1})(月)([0-9]{1})(日)\b",
+        r"\b(昭|平|令)([0-9]*.)([0-9]*.)([0-9]*)\b",
     ]
 
     @classmethod
     def find_patterns(cls, text, patterns):
-        results = []
+        ret = []
         for pattern in patterns:
-            results.extend(re.findall(pattern, text))
-        return results
+            all_matches = re.findall(pattern, text)
+            for match in all_matches:
+                ret.append("".join(match))
+        return ret
 
     @classmethod
     def replace_patterns(cls, text, patterns, label):
