@@ -1,0 +1,10 @@
+version: '3'
+services:
+  main:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "7000:7000"
+    volumes:
+      - /home/aime/AimesoftTraining/test/data:/app/data

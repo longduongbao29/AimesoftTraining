@@ -2,10 +2,11 @@
 from .ner_model import NERModel
 from .regex_patterns import RegexPatterns
 
+model_snapshot = "39c525b11d35426fea754e906c4847208582647f"
 
 class TextProcessor:
     def __init__(self):
-        self.ner_model = NERModel(model_path="./app/model")
+        self.ner_model = NERModel(f"/app/model/snapshots/{model_snapshot}")
         self.regex_patterns = RegexPatterns()
 
     def process_text(self, text):

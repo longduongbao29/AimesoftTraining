@@ -1,15 +1,15 @@
 # docker-compose.yml
-version: '3.8'
+version: '3'
 services:
-  ner_service:
+  service:
     build:
       context: .
       dockerfile: Dockerfile
       args:
         PORT: ${PORT}
     volumes:
-      - /home/aime/.cache/huggingface/hub/models--tsmatz--xlm-roberta-ner-japanese/snapshots/39c525b11d35426fea754e906c4847208582647f:/app/model
+      - /home/aime/.cache/huggingface/hub/models--tsmatz--xlm-roberta-ner-japanese:/app/model
     ports:
-      - ${PORT}:${PORT}
+      - "${PORT}:${PORT}"
     env_file:
       - .env

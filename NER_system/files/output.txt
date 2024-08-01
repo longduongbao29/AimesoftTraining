@@ -28,3 +28,7 @@
 　【物件名】　　　　　特許請求の範囲　１
 　【物件名】　　　　　要約書　　　　　１
 　【物件名】　　　　　図面　　　　　　１
+
+x (postal), x (postal)
+x (date), x (date), x (date)
+x (date)
