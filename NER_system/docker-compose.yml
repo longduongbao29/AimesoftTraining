@@ -1,0 +1,15 @@
+# docker-compose.yml
+version: '3'
+services:
+  service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        PORT: ${PORT}
+    volumes:
+      - /home/aime/.cache/huggingface/hub/models--tsmatz--xlm-roberta-ner-japanese:/app/model
+    ports:
+      - "${PORT}:${PORT}"
+    env_file:
+      - .env
