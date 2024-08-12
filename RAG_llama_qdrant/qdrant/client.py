@@ -5,6 +5,9 @@ from qdrant_client.http.models import Distance, VectorParams
 from qdrant.text_reader import TextReader
 from langchain_text_splitters import CharacterTextSplitter
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Qdrant_Client:
