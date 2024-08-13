@@ -4,17 +4,15 @@ from langchain_qdrant import QdrantVectorStore
 from qdrant_client.http.models import Distance, VectorParams
 from qdrant.text_reader import TextReader
 from langchain_text_splitters import CharacterTextSplitter
-import os
-from dotenv import load_dotenv
+from Rag.config.config import Config
 
-load_dotenv()
-
+config = Config()
 
 class Qdrant_Client:
     def __init__(self, embeddings) -> None:
 
-        self.url = os.getenv("QDRANT_URL")
-        self.api_key = os.getenv("QDRANT_API_KEY")
+        self.url = config.qdrant_url
+        self.api_key = config.qdrant_key
         self.embeddings = embeddings
         self.client = qdrant_client.QdrantClient(
             url=self.url,

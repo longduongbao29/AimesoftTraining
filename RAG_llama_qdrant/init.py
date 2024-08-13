@@ -1,7 +1,7 @@
 from langchain_community.llms import LlamaCpp
 from langchain.prompts.prompt import PromptTemplate
 from qdrant.client import Qdrant_Client
-from nlp.embedding import LlamaCppEmbeddings_
+from Rag.embedding.embedding import LlamaCppEmbeddings_
 from fastapi import FastAPI
 
 
