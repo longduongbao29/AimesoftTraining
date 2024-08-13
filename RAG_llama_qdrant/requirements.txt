@@ -8,3 +8,5 @@ qdrant_client
 langchain_qdrant
 python-dotenv
 python-multipart
+llama-cpp-python
+langchainhub

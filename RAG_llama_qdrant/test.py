@@ -1,20 +1,16 @@
-from llama_cpp import Llama
+from Rag.answer.answer import Generate
+from Rag.retriever.query_translation import MultiQuery, RAGFusion, QueryDecompostion
+from init import vars
 
-llm = Llama(
-    model_path="D:\Code\AimesoftTraining\RAG_llama_qdrant\models\llama-2-7b-chat.Q2_K.gguf",
-    chat_format="chatml",
-)
-out = llm.create_chat_completion(
-    messages=[
-        {
-            "role": "system",
-            "content": "You are a helpful assistant that outputs in JSON.",
-        },
-        {"role": "user", "content": "Who won the world series in 2020"},
-    ],
-    response_format={
-        "type": "json_object",
-    },
-    temperature=0.7,
-)
-print(out)
+# multi_query = MultiQuery(vars.llm)
+# generate = Generate(vars.llm, multi_query)
+# print(generate.generate("What is pokemon?"))
+
+# rag_fusion = RAGFusion(vars.llm)
+# generate = Generate(vars.llm, retriever= rag_fusion)
+# print(generate.generate("What is pokemon?"))
+
+
+decomposition = QueryDecompostion(vars.llm, mode="individual")
+generate = Generate(vars.llm, decomposition)
+print(generate.generate("What is pokemon?"))

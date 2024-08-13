@@ -17,7 +17,9 @@ Question:\"
 
 Answer:"""
 
+
 fast_app = FastAPI()
+
 
 class InitVariable:
     def __init__(self, model_path="models/llama-2-7b-chat.Q2_K.gguf"):
@@ -27,4 +29,7 @@ class InitVariable:
         self.qa_prompt = PromptTemplate.from_template(template)
         self.llm = LlamaCpp(model_path=model_path, n_gpu_layers=15000, n_ctx=2048)
 
+
 vars = InitVariable()
+
+print("Initialized variables!")

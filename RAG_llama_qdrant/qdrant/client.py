@@ -1,4 +1,3 @@
-from typing import Iterable
 import qdrant_client
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.http.models import Distance, VectorParams
@@ -7,6 +6,7 @@ from langchain_text_splitters import CharacterTextSplitter
 from Rag.config.config import Config
 
 config = Config()
+
 
 class Qdrant_Client:
     def __init__(self, embeddings) -> None:
@@ -41,10 +41,19 @@ class Qdrant_Client:
     def upload_docs_to_database(self, docs):
         self.vectorstore.add_documents(docs)
 
-    def retriever(self, text, k):
+    def retriever(self, text, k=3):
+        if len(text) == 0:
+            return []
         docs = self.vectorstore.similarity_search(query=text, k=k)
         return docs
 
     def upload_from_text(self, text, title):
         docs = TextReader.create_document(text, title)
         self.upload_docs_to_database(docs)
+
+    def retriever_map(self, queries):
+        docs = []
+        for query in queries:
+            response = self.retriever(query)
+            docs.append(response)
+        return docs
