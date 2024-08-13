@@ -1,3 +1,10 @@
-
+fastapi
+uvicorn
+langchain
+langchain_community
 llama-index-llms-ollama
 llama-index-embeddings-huggingface
+qdrant_client
+langchain_qdrant
+python-dotenv
+python-multipart

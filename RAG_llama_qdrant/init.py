@@ -2,7 +2,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.prompts.prompt import PromptTemplate
 from qdrant.client import Qdrant_Client
 from nlp.embedding import LlamaCppEmbeddings_
-import logging
+from fastapi import FastAPI
 
 
 template = """You are an assistant to the user, you are given some context below, please answer the query of the user with as detail as possible
@@ -17,6 +17,7 @@ Question:\"
 
 Answer:"""
 
+fast_app = FastAPI()
 
 class InitVariable:
     def __init__(self, model_path="models/llama-2-7b-chat.Q2_K.gguf"):
@@ -25,3 +26,5 @@ class InitVariable:
         self.qdrant_client = Qdrant_Client(embeddings=self.embedding)
         self.qa_prompt = PromptTemplate.from_template(template)
         self.llm = LlamaCpp(model_path=model_path, n_gpu_layers=15000, n_ctx=2048)
+
+vars = InitVariable()
