@@ -90,6 +90,7 @@ class Retriever:
             for doc in ds:
                 flatten.append(doc)
         return flatten
+
     def generate_queries(self, question: str) -> list[str]:
         """
         Generate 3 queries for the given question
@@ -98,14 +99,13 @@ class Retriever:
         queries = chain.invoke(question)
         return queries
 
+
 class MultiQuery(Retriever):
     def __init__(self, model) -> None:
         self.model = model
         self.template = templates.multiquery_template
         self.prompt = templates.multiquery_prompt
         self.generate_prompt = templates.default_prompt
-
-  
 
     def retriever(self, question: str):
         """
@@ -161,8 +161,6 @@ class RAGFusion(Retriever):
         # Return the reranked results as a list of tuples, each containing the document and its fused score
         return reranked_results
 
-   
-
     def retriever(self, question: str):
         """
         Retrieve documents related to the question using the Qdrant client with rerank documents.
@@ -202,9 +200,7 @@ class QueryDecompostion(Retriever):
         else:
             self.generate_prompt = templates.individual_decomposition_prompt
 
-
-
-    def format_qa_pair(question, answer):
+    def format_qa_pairs(question, answer):
         """Format Q and A pair"""
 
         formatted_string = ""
@@ -252,19 +248,22 @@ class StepBack(Retriever):
         input_vars = {
             "normal_context": normal_context,
             "step_back_context": step_back_context,
-            "question": question
+            "question": question,
         }
         return input_vars
+
 
 class HyDE(Retriever):
     def __init__(self, model) -> None:
         self.model = model
         self.prompt = templates.prompt_hyde
         self.generate_prompt = templates.default_prompt
+
     def generate_docs(self, question: str) -> list[str]:
-        chain = self.prompt | self.model | StrOutputParser() 
+        chain = self.prompt | self.model | StrOutputParser()
         docs = chain.invoke(question)
         return docs
+
     def retriever(self, question):
         docs_for_retrieval = self.generate_docs(question)
         docs = super().retriever(docs_for_retrieval)

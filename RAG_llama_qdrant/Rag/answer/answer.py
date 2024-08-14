@@ -3,9 +3,29 @@ from Rag.retriever.query_translation import (
     MultiQuery,
     RAGFusion,
     QueryDecompostion,
+    StepBack,
+    HyDE
 )
+from Rag.schemas.schemas import ModeEnum
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
+
+
+def get_retriever(mode: ModeEnum) -> Retriever:
+    retriever_ = Retriever(vars.llm)
+    if mode == ModeEnum.multi_query:
+        retriever_ = MultiQuery(vars.llm)
+    elif mode == ModeEnum.rag_fusion:
+        retriever_ = RAGFusion(vars.llm)
+    elif mode == ModeEnum.recursive_decomposition:
+        retriever_ = QueryDecompostion(vars.llm, mode="recursive")
+    elif mode == ModeEnum.individual_decomposition:
+        retriever_ = QueryDecompostion(vars.llm, mode="individual")
+    elif mode == ModeEnum.step_back:
+        retriever_ = StepBack(vars.llm)
+    elif mode == ModeEnum.hyde:
+        retriever_ = HyDE(vars.llm)
+    return retriever_
 
 
 class Generate:

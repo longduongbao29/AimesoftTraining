@@ -15,7 +15,11 @@ from init import vars
 # generate = Generate(vars.llm, decomposition)
 # print(generate.generate("What is pokemon?"))
 
-hyde = HyDE(vars.llm)
-generate = Generate(vars.llm, hyde)
+stepback = StepBack(vars.llm)
+generate = Generate(vars.llm, stepback)
 print(generate.generate("What is pokemon?"))
 
+
+# hyde = HyDE(vars.llm)
+# generate = Generate(vars.llm, hyde)
+# print(generate.generate("What is pokemon?"))

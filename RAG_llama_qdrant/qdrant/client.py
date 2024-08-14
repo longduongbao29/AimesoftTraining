@@ -1,7 +1,7 @@
 import qdrant_client
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.http.models import Distance, VectorParams
-from qdrant.text_reader import TextReader``
+from qdrant.text_reader import TextReader
 from langchain_text_splitters import CharacterTextSplitter
 from Rag.config.config import Config
 
@@ -30,7 +30,7 @@ class Qdrant_Client:
                 embedding=embeddings,
             )
         except Exception as e:
-            print("Error: %s try init from existing collection")
+            print("Init from existing collection")
             self.vectorstore = QdrantVectorStore.from_existing_collection(
                 url=self.url,
                 api_key=self.api_key,
@@ -51,7 +51,7 @@ class Qdrant_Client:
         docs = TextReader.create_document(text, title)
         self.upload_docs_to_database(docs)
 
-    def retriever_map(self, queries: list[str])-> list[list]:
+    def retriever_map(self, queries: list[str]) -> list[list]:
         docs = []
         for query in queries:
             response = self.retriever(query)

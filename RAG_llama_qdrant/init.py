@@ -2,7 +2,7 @@ from langchain_community.llms import LlamaCpp
 from langchain.prompts.prompt import PromptTemplate
 from qdrant.client import Qdrant_Client
 from Rag.embedding.embedding import LlamaCppEmbeddings_
-from fastapi import FastAPI
+
 
 
 template = """You are an assistant to the user, you are given some context below, please answer the query of the user with as detail as possible
@@ -18,7 +18,6 @@ Question:\"
 Answer:"""
 
 
-fast_app = FastAPI()
 
 
 class InitVariable:
