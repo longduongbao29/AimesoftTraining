@@ -11,3 +11,5 @@ python-multipart
 llama-cpp-python
 langchainhub
 py-pdf-parser
+langchain_groq
+langchain_ollama

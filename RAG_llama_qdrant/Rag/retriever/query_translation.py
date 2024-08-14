@@ -2,14 +2,24 @@ import Rag.retriever.templates as templates
 from langchain_core.output_parsers import StrOutputParser
 from langchain.load import dumps, loads
 from init import vars
+from langchain_core.retrievers import BaseRetriever, Document
+from langchain_core.language_models.base import BaseLanguageModel
+from langchain.prompts import ChatPromptTemplate
+from typing import List
 
 
-class Retriever:
-    def __init__(self, model):
-        self.generate_prompt = templates.default_prompt
+class Retriever(BaseRetriever):
+    model: BaseLanguageModel = None
+    generate_prompt: ChatPromptTemplate = templates.default_prompt
+    query_generate_prompt: ChatPromptTemplate = None
+    docs: List[Document] = None
+    k: int = 5
+
+    def __init__(self, model, **kwargs):
+        super().__init__(**kwargs)
         self.model = model
 
-    def retriever(self, question: str):
+    def _get_relevant_documents(self, question: str):
         """
         Retrieve documents related to the question using the Qdrant client.
         Args:
@@ -18,8 +28,8 @@ class Retriever:
         List[Document]: A list of documents related to the question.
 
         """
-        docs = vars.qdrant_client.vectorstore.similarity_search(query=question)
-        return docs
+        self.docs = vars.qdrant_client.vectorstore.similarity_search(query=question)
+        return self.docs[: self.k]
 
     def remove_duplicates(self, documents):
         """
@@ -71,7 +81,7 @@ class Retriever:
         Returns:
         dict: input variables for the prompt.
         """
-        docs = self.retriever(question)
+        docs = self._get_relevant_documents(question)
         page_contents = self.get_page_contents(docs)
         context = self.get_context(page_contents)
         return {"question": question, "context": context}
@@ -95,19 +105,24 @@ class Retriever:
         """
         Generate 3 queries for the given question
         """
-        chain = self.prompt | self.model | StrOutputParser() | (lambda x: x.split("\n"))
+        chain = (
+            self.query_generate_prompt
+            | self.model
+            | StrOutputParser()
+            | (lambda x: x.split("\n"))
+        )
         queries = chain.invoke(question)
         return queries
 
 
 class MultiQuery(Retriever):
+
     def __init__(self, model) -> None:
-        self.model = model
-        self.template = templates.multiquery_template
-        self.prompt = templates.multiquery_prompt
+        super().__init__(model)
+        self.query_generate_prompt = templates.multiquery_prompt
         self.generate_prompt = templates.default_prompt
 
-    def retriever(self, question: str):
+    def _get_relevant_documents(self, question: str):
         """
         Retrieve documents related to the question using the Qdrant client.
         Args:
@@ -118,15 +133,14 @@ class MultiQuery(Retriever):
         queries = self.generate_queries(question)
         docs = vars.qdrant_client.retriever_map(queries)
         docs = self.flatten_docs(docs)
-        docs = self.remove_duplicates(docs)
-        return docs
+        self.docs = self.remove_duplicates(docs)
+        return self.docs[: self.k]
 
 
 class RAGFusion(Retriever):
     def __init__(self, model) -> None:
-        self.model = model
-        self.template = templates.rag_fusion_template
-        self.prompt = templates.rag_fusion_prompt
+        super().__init__(model)
+        self.query_generate_prompt = templates.rag_fusion_prompt
         self.generate_prompt = templates.default_prompt
 
     def reciprocal_rank_fusion(self, results, k=60):
@@ -161,7 +175,7 @@ class RAGFusion(Retriever):
         # Return the reranked results as a list of tuples, each containing the document and its fused score
         return reranked_results
 
-    def retriever(self, question: str):
+    def _get_relevant_documents(self, question: str):
         """
         Retrieve documents related to the question using the Qdrant client with rerank documents.
         Args:
@@ -171,8 +185,8 @@ class RAGFusion(Retriever):
         """
         queries = self.generate_queries(question)
         docs = vars.qdrant_client.retriever_map(queries)
-        rerank_docs = self.reciprocal_rank_fusion(docs)
-        return rerank_docs
+        self.docs = self.reciprocal_rank_fusion(docs)
+        return self.docs[: self.k]
 
     def get_input_vars(self, question: str):
         """
@@ -182,7 +196,7 @@ class RAGFusion(Retriever):
         Returns:
         dict: input variables for the prompt.
         """
-        docs = self.retriever(question)
+        docs = self._get_relevant_documents(question)
         docs = [doc[0] for doc in docs]
         page_contents = self.get_page_contents(docs)
         context = self.get_context(page_contents)
@@ -191,10 +205,9 @@ class RAGFusion(Retriever):
 
 class QueryDecompostion(Retriever):
     def __init__(self, model, mode) -> None:
-        self.model = model
+        super().__init__(model)
         self.decomposition_mode = mode
-        self.template = templates.decomposition_template
-        self.prompt = templates.decomposition_prompt
+        self.query_generate_prompt = templates.decomposition_prompt
         if mode == "recursive":
             self.generate_prompt = templates.recursive_decomposition_prompt
         else:
@@ -219,7 +232,7 @@ class QueryDecompostion(Retriever):
         for sub_question in sub_questions:
 
             # Retrieve documents for each sub-question
-            retrieved_docs = self.retriever(sub_question)
+            retrieved_docs = self._get_relevant_documents(sub_question)
 
             # Use retrieved documents and sub-question in RAG chain
             answer = (prompt_rag | self.model | StrOutputParser()).invoke(
@@ -234,12 +247,12 @@ class QueryDecompostion(Retriever):
 
 class StepBack(Retriever):
     def __init__(self, model) -> None:
-        self.model = model
-        self.prompt = templates.step_back_prompt
+        super().__init__(model)
+        self.query_generate_prompt = templates.step_back_prompt
         self.generate_prompt = templates.generate_step_back_prompt
 
     def get_input_vars(self, question: str):
-        normal_context = self.retriever(question)
+        normal_context = self._get_relevant_documents(question)
         queries = self.generate_queries(question)
         step_back_docs = vars.qdrant_client.retriever_map(queries)
         step_back_docs = self.flatten_docs(step_back_docs)
@@ -255,16 +268,16 @@ class StepBack(Retriever):
 
 class HyDE(Retriever):
     def __init__(self, model) -> None:
-        self.model = model
-        self.prompt = templates.prompt_hyde
+        super().__init__(model)
+        self.query_generate_prompt = templates.prompt_hyde
         self.generate_prompt = templates.default_prompt
 
     def generate_docs(self, question: str) -> list[str]:
-        chain = self.prompt | self.model | StrOutputParser()
+        chain = self.query_generate_prompt | self.model | StrOutputParser()
         docs = chain.invoke(question)
         return docs
 
-    def retriever(self, question):
+    def _get_relevant_documents(self, question):
         docs_for_retrieval = self.generate_docs(question)
-        docs = super().retriever(docs_for_retrieval)
-        return docs
+        self.docs = super()._get_relevant_documents(docs_for_retrieval)
+        return self.docs[: self.k]

@@ -22,7 +22,7 @@ class Qdrant_Client:
         try:
             self.client.create_collection(
                 collection_name="docs",
-                vectors_config=VectorParams(size=4096, distance=Distance.COSINE),
+                vectors_config=VectorParams(size=384, distance=Distance.COSINE),
             )
             self.vectorstore = QdrantVectorStore(
                 client=self.client,

@@ -1,9 +1,9 @@
 from fastapi.responses import HTMLResponse
 from Rag.schemas.schemas import File, RetrieverSchema, Question
 from Rag.answer.answer import Generate, get_retriever
-
 from init import vars
 from fastapi import APIRouter
+from fastapi import UploadFile, File
 
 router = APIRouter()
 
@@ -20,7 +20,7 @@ def read_root():
 def retriever(question: Question, mode: RetrieverSchema):
     question = question.question
     retriever = get_retriever(mode.mode)
-    docs = retriever.retriever(question)
+    docs = retriever.invoke(question)
     return docs
 
 
@@ -29,13 +29,13 @@ async def model_predict(question: Question, retrieval_schema: RetrieverSchema):
     question = question.question
     retriever = get_retriever(retrieval_schema.mode)
     generate = Generate(vars.llm, retriever)
-    answer = generate.generate(question)
+    answer = generate._run(question)
     return answer
 
 
 @router.post("/upload_file")
-async def upload_to_database(file: File):
-    contents = await file.file.read()
+async def upload_to_database(file: UploadFile = File(...)):
+    contents = await file.read()
     text = contents.decode("utf-8")
     vars.qdrant_client.upload_from_text(text=text, title=file.filename)
     return {"message": "File uploaded and processed successfully"}

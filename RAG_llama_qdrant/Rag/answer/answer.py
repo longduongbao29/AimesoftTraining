@@ -4,11 +4,17 @@ from Rag.retriever.query_translation import (
     RAGFusion,
     QueryDecompostion,
     StepBack,
-    HyDE
+    HyDE,
 )
 from Rag.schemas.schemas import ModeEnum
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
+from init import vars
+from langchain_core.tools import BaseTool
+from langchain_core.language_models.base import BaseLanguageModel
+from langchain.prompts import ChatPromptTemplate
+from langchain_core.runnables.base import RunnableSerializable
+from typing import Dict
 
 
 def get_retriever(mode: ModeEnum) -> Retriever:
@@ -28,15 +34,23 @@ def get_retriever(mode: ModeEnum) -> Retriever:
     return retriever_
 
 
-class Generate:
+class Generate(BaseTool):
+    retriever: Retriever = None
+    llm: BaseLanguageModel = None
+    prompt: ChatPromptTemplate = None
+    chain: RunnableSerializable[Dict, str] = None
 
-    def __init__(self, llm, retriever: Retriever):
+    def __init__(self, llm, retriever):
+        super().__init__(
+            name="Retrieval Tool",
+            description="Retriever information from document invole Pokemon",
+        )
         self.retriever = retriever
         self.llm = llm
         self.prompt = retriever.generate_prompt
         self.chain = self.prompt | self.llm | StrOutputParser()
 
-    def generate(self, question: str):
+    def _run(self, question: str):
         response = None
         if isinstance(self.retriever, QueryDecompostion):
             response = self.decomposition_generate(question)
@@ -55,7 +69,7 @@ class Generate:
             answer = ""
             q_a_pairs = ""
             for q in questions:
-                docs = self.retriever.retriever(question)
+                docs = self.retriever.invoke(question)
                 page_contents = self.retriever.get_page_contents(docs)
                 context = self.retriever.get_context(page_contents)
                 answer = self.chain.invoke(

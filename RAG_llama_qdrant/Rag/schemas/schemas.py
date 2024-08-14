@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from fastapi import UploadFile, File, UploadFile
+from fastapi import UploadFile, File
 from typing import List
 from enum import Enum
 

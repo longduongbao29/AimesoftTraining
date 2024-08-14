@@ -1,32 +1,22 @@
-from langchain_community.llms import LlamaCpp
-from langchain.prompts.prompt import PromptTemplate
+from langchain_community.chat_models.llamacpp import ChatLlamaCpp
 from qdrant.client import Qdrant_Client
-from Rag.embedding.embedding import LlamaCppEmbeddings_
+from langchain_groq import ChatGroq
+from Rag.config.config import Config
+from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
-
-
-template = """You are an assistant to the user, you are given some context below, please answer the query of the user with as detail as possible
-
-Context:\"""
-{context}
-\"""
-
-Question:\"
-{question}
-\"""
-
-Answer:"""
-
-
+config = Config()
 
 
 class InitVariable:
+
     def __init__(self, model_path="models/llama-2-7b-chat.Q2_K.gguf"):
         self.model_path = model_path
-        self.embedding = LlamaCppEmbeddings_(model_path=model_path, n_gpu_layers=15000)
+        # self.embedding = LlamaCppEmbeddings_(model_path=model_path, n_gpu_layers=15000)
+        self.embedding = FastEmbedEmbeddings()
+
         self.qdrant_client = Qdrant_Client(embeddings=self.embedding)
-        self.qa_prompt = PromptTemplate.from_template(template)
-        self.llm = LlamaCpp(model_path=model_path, n_gpu_layers=15000, n_ctx=2048)
+        # self.llm = ChatLlamaCpp(model_path=model_path, n_gpu_layers=15000, n_ctx=2048)
+        self.llm = ChatGroq(api_key=config.groq_api_key)
 
 
 vars = InitVariable()
