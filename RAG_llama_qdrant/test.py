@@ -1,5 +1,5 @@
 from Rag.answer.answer import Generate
-from Rag.retriever.query_translation import MultiQuery, RAGFusion, QueryDecompostion
+from Rag.retriever.query_translation import MultiQuery, RAGFusion, QueryDecompostion, StepBack, HyDE
 from init import vars
 
 # multi_query = MultiQuery(vars.llm)
@@ -11,6 +11,11 @@ from init import vars
 # print(generate.generate("What is pokemon?"))
 
 
-decomposition = QueryDecompostion(vars.llm, mode="individual")
-generate = Generate(vars.llm, decomposition)
+# decomposition = QueryDecompostion(vars.llm, mode="individual")
+# generate = Generate(vars.llm, decomposition)
+# print(generate.generate("What is pokemon?"))
+
+hyde = HyDE(vars.llm)
+generate = Generate(vars.llm, hyde)
 print(generate.generate("What is pokemon?"))
+

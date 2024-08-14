@@ -18,12 +18,10 @@ class Generate:
 
     def generate(self, question: str):
         response = None
-        if isinstance(self.retriever, MultiQuery) or isinstance(
-            self.retriever, RAGFusion
-        ):
-            response = self.default_generate(question)
-        elif isinstance(self.retriever, QueryDecompostion):
+        if isinstance(self.retriever, QueryDecompostion):
             response = self.decomposition_generate(question)
+        else:
+            response = self.default_generate(question)
         return response
 
     def default_generate(self, question):

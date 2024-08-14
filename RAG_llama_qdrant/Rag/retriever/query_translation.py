@@ -90,7 +90,13 @@ class Retriever:
             for doc in ds:
                 flatten.append(doc)
         return flatten
-
+    def generate_queries(self, question: str) -> list[str]:
+        """
+        Generate 3 queries for the given question
+        """
+        chain = self.prompt | self.model | StrOutputParser() | (lambda x: x.split("\n"))
+        queries = chain.invoke(question)
+        return queries
 
 class MultiQuery(Retriever):
     def __init__(self, model) -> None:
@@ -99,18 +105,7 @@ class MultiQuery(Retriever):
         self.prompt = templates.multiquery_prompt
         self.generate_prompt = templates.default_prompt
 
-    def generate_queries(self, question: str):
-        """Generate 5 queries for the given question
-
-        Args:
-            question (str): question for query generation
-
-        Returns:
-            list[str]: list of queries
-        """
-        chain = self.prompt | self.model | StrOutputParser() | (lambda x: x.split("\n"))
-        queries = chain.invoke(question)
-        return queries
+  
 
     def retriever(self, question: str):
         """
@@ -166,13 +161,7 @@ class RAGFusion(Retriever):
         # Return the reranked results as a list of tuples, each containing the document and its fused score
         return reranked_results
 
-    def generate_queries(self, question: str):
-        """
-        Generate 3 queries for the given question
-        """
-        chain = self.prompt | self.model | StrOutputParser() | (lambda x: x.split("\n"))
-        queries = chain.invoke(question)
-        return queries
+   
 
     def retriever(self, question: str):
         """
@@ -213,10 +202,7 @@ class QueryDecompostion(Retriever):
         else:
             self.generate_prompt = templates.individual_decomposition_prompt
 
-    def generate_queries(self, question: str):
-        chain = self.prompt | self.model | StrOutputParser() | (lambda x: x.split("\n"))
-        queries = chain.invoke(question)
-        return queries
+
 
     def format_qa_pair(question, answer):
         """Format Q and A pair"""
@@ -251,10 +237,35 @@ class QueryDecompostion(Retriever):
 
 
 class StepBack(Retriever):
-    def __init__(self) -> None:
-        pass
+    def __init__(self, model) -> None:
+        self.model = model
+        self.prompt = templates.step_back_prompt
+        self.generate_prompt = templates.generate_step_back_prompt
 
+    def get_input_vars(self, question: str):
+        normal_context = self.retriever(question)
+        queries = self.generate_queries(question)
+        step_back_docs = vars.qdrant_client.retriever_map(queries)
+        step_back_docs = self.flatten_docs(step_back_docs)
+        docs_content = self.get_page_contents(step_back_docs)
+        step_back_context = self.get_context(docs_content)
+        input_vars = {
+            "normal_context": normal_context,
+            "step_back_context": step_back_context,
+            "question": question
+        }
+        return input_vars
 
-class HyDE:
-    def __init__(self) -> None:
-        pass
+class HyDE(Retriever):
+    def __init__(self, model) -> None:
+        self.model = model
+        self.prompt = templates.prompt_hyde
+        self.generate_prompt = templates.default_prompt
+    def generate_docs(self, question: str) -> list[str]:
+        chain = self.prompt | self.model | StrOutputParser() 
+        docs = chain.invoke(question)
+        return docs
+    def retriever(self, question):
+        docs_for_retrieval = self.generate_docs(question)
+        docs = super().retriever(docs_for_retrieval)
+        return docs

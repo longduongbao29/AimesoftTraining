@@ -10,3 +10,4 @@ python-dotenv
 python-multipart
 llama-cpp-python
 langchainhub
+py-pdf-parser
