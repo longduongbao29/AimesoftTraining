@@ -17,9 +17,5 @@ class Question(BaseModel):
     question: str = Field(examples=["What is your name?"])
 
 
-class File(BaseModel):
-    file: UploadFile = File(...)
-
-
 class RetrieverSchema(BaseModel):
     mode: ModeEnum

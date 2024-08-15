@@ -1,14 +1,17 @@
 import qdrant_client
 from langchain_qdrant import QdrantVectorStore
 from qdrant_client.http.models import Distance, VectorParams
-from qdrant.text_reader import TextReader
+from Rag.extract_documents.text_reader import TextReader
 from langchain_text_splitters import CharacterTextSplitter
 from Rag.config.config import Config
+
 
 config = Config()
 
 
 class Qdrant_Client:
+    """Qdrant client for vector databse"""
+
     def __init__(self, embeddings) -> None:
 
         self.url = config.qdrant_url
@@ -38,20 +41,39 @@ class Qdrant_Client:
                 collection_name="docs",
             )
 
-    def upload_docs_to_database(self, docs):
-        self.vectorstore.add_documents(docs)
+    def retriever(self, text: str, k=3):
+        """Get k relevant documents to given input text
 
-    def retriever(self, text, k=3):
+        Args:
+            text (_type_): _description_
+            k (int, optional): _description_. Defaults to 3.
+
+        Returns:
+            _type_: _description_
+        """
         if len(text) == 0:
             return []
         docs = self.vectorstore.similarity_search(query=text, k=k)
         return docs
 
-    def upload_from_text(self, text, title):
-        docs = TextReader.create_document(text, title)
-        self.upload_docs_to_database(docs)
+    def upload_from_text(self, text: TextReader):
+        """From input text, chunking and saving to Qdrant collection
+
+        Args:
+            text (str): input text
+            title (str): title of document
+        """
+        docs = text.create_document()
+        self.vectorstore.add_documents(docs)
 
     def retriever_map(self, queries: list[str]) -> list[list]:
+        """From input queries, get relevant documents
+
+        Args:
+            queries (list[str]): input queries
+        Returns:
+            list[list]: relevant documents for each query
+        """
         docs = []
         for query in queries:
             response = self.retriever(query)

@@ -6,11 +6,11 @@ from langchain.agents import AgentExecutor
 from langchain.prompts import ChatPromptTemplate
 from Rag.answer.answer import Generate
 
-prompt = ChatPromptTemplate.from_messages(
+agent_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a helpful assistant. Your task is make a decision to use retriever_tool or search_tool to answer the given question.",
+            "You are a helpful assistant. Use retrieval tool to answer the given question.",
         ),
         ("placeholder", "{chat_history}"),
         ("human", "{input}"),
@@ -27,7 +27,7 @@ class Agent:
         self.retriever_tool = Generate(llm, retriever)
         self.tools = [self.search_tool, self.retriever_tool]
         # self.prompt = hub.pull("hwchase17/openai-functions-agent")
-        self.agent = create_tool_calling_agent(self.llm, self.tools, prompt)
+        self.agent = create_tool_calling_agent(self.llm, self.tools, agent_prompt)
         self.agent_executor = AgentExecutor(
             agent=self.agent, tools=self.tools, verbose=True
         )
