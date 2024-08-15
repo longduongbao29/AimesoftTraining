@@ -3,6 +3,7 @@ from langchain_text_splitters import TextSplitter
 import fitz
 from logs.loging import logger
 from typing import List
+import re
 
 MAX_CHUNK_SIZE = 1000
 
@@ -28,7 +29,7 @@ class TextReader(TextSplitter):
         for page in doc:
             self.text += page.get_text()
         doc.close()
-        logger.info({"text:", self.text})
+        # logger.info({"text:", self.text})
         return self.text
 
     def create_document(self):
@@ -38,9 +39,7 @@ class TextReader(TextSplitter):
         return docs
 
     def split_text_by_paragraphs(self, text):
-        paragraphs = text.split(
-            ".\n"
-        )  # Assuming paragraphs are separated by double newlines
+        paragraphs = re.split(r"\.\n|\n\n", text)
         chunks = []
         chunk = ""
         for paragraph in paragraphs:

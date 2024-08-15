@@ -7,6 +7,6 @@ langchain_qdrant
 python-dotenv
 python-multipart
 langchainhub
-py-pdf-parser
 langchain_groq
 fastembed   
+PyMuPDF

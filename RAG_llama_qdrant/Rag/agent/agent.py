@@ -10,7 +10,7 @@ agent_prompt = ChatPromptTemplate.from_messages(
     [
         (
             "system",
-            "You are a helpful assistant. Use retrieval tool to answer the given question.",
+            "You are a helpful assistant. Use search tool or retrieval tool to answer the given question.",
         ),
         ("placeholder", "{chat_history}"),
         ("human", "{input}"),

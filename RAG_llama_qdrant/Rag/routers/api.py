@@ -40,12 +40,12 @@ async def model_predict(question: Question, retrieval_schema: RetrieverSchema):
 async def upload_to_database(file: UploadFile = File(...)):
     contents = await file.read()
     file_path = "data/{file.filename}"
+    text_reader = TextReader(file_path=file_path, doc_name=file.filename)
     with open(file_path, "wb") as f:
         f.write(contents)
     if ".txt" in file.filename:
-        text = contents.decode("utf-8")
+        text_reader.text = contents.decode("utf-8")
     else:
-        text_reader = TextReader(file_path=file_path, doc_name=file.filename)
-        text = text_reader.readpdf()
+        text_reader.readpdf()
     vars.qdrant_client.upload_from_text(text_reader)
     return {"message": "File uploaded and processed successfully"}
