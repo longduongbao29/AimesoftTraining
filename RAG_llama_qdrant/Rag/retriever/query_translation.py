@@ -6,6 +6,7 @@ from langchain_core.retrievers import BaseRetriever, Document
 from langchain_core.language_models.base import BaseLanguageModel
 from langchain.prompts import ChatPromptTemplate
 from typing import List
+from logs.loging import logger
 
 
 class Retriever(BaseRetriever):
@@ -101,9 +102,9 @@ class Retriever(BaseRetriever):
                 flatten.append(doc)
         return flatten
 
-    def generate_queries(self, question: str) -> list[str]:
+    def generate_queries(self, question: str, k=5) -> list[str]:
         """
-        Generate 3 queries for the given question
+        Generate k queries for the given question
         """
         chain = (
             self.query_generate_prompt
@@ -111,8 +112,9 @@ class Retriever(BaseRetriever):
             | StrOutputParser()
             | (lambda x: x.split("\n"))
         )
-        queries = chain.invoke(question)
-        return queries
+        queries = chain.invoke({"question": question, "k": k})
+        logger.info({"queries": queries[-k:]})
+        return queries[-k:]
 
 
 class MultiQuery(Retriever):
@@ -204,6 +206,8 @@ class RAGFusion(Retriever):
 
 
 class QueryDecompostion(Retriever):
+    decomposition_mode: str = "recursive"
+
     def __init__(self, model, mode) -> None:
         super().__init__(model)
         self.decomposition_mode = mode
@@ -213,11 +217,12 @@ class QueryDecompostion(Retriever):
         else:
             self.generate_prompt = templates.individual_decomposition_prompt
 
-    def format_qa_pairs(question, answer):
+    def format_qa_pairs(self, question, answer):
         """Format Q and A pair"""
 
         formatted_string = ""
         formatted_string += f"Question: {question}\nAnswer: {answer}\n\n"
+        logger.info(formatted_string.strip())
         return formatted_string.strip()
 
     def retrieve_and_rag(self, question, prompt_rag, sub_question_generator_chain):
@@ -252,12 +257,17 @@ class StepBack(Retriever):
         self.generate_prompt = templates.generate_step_back_prompt
 
     def get_input_vars(self, question: str):
-        normal_context = self._get_relevant_documents(question)
+        normal_context = self.get_context(
+            self.get_page_contents(self._get_relevant_documents(question))
+        )
         queries = self.generate_queries(question)
         step_back_docs = vars.qdrant_client.retriever_map(queries)
         step_back_docs = self.flatten_docs(step_back_docs)
         docs_content = self.get_page_contents(step_back_docs)
         step_back_context = self.get_context(docs_content)
+        logger.info(
+            {"normal context": normal_context, "step_back_context": step_back_context}
+        )
         input_vars = {
             "normal_context": normal_context,
             "step_back_context": step_back_context,
@@ -279,5 +289,6 @@ class HyDE(Retriever):
 
     def _get_relevant_documents(self, question):
         docs_for_retrieval = self.generate_docs(question)
+        logger.info({"docs Hyde": docs_for_retrieval})
         self.docs = super()._get_relevant_documents(docs_for_retrieval)
         return self.docs[: self.k]

@@ -10,7 +10,7 @@ formatter = logging.Formatter("%(asctime)s | %(levelname)s | %(message)s")
 # stdout_handler.setFormatter(formatter)
 
 file_handler = logging.FileHandler("logs/logs.log", encoding="utf-8")
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(formatter)
 # Xóa tất cả handlers đã có (nếu có)
 if logger.hasHandlers():

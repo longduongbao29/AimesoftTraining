@@ -39,6 +39,14 @@ class TextReader(TextSplitter):
         return docs
 
     def split_text_by_paragraphs(self, text):
+        """Split text by paragraphs by .\n or \n\n
+
+        Args:
+            text (str): text to split
+
+        Returns:
+            list: chunks
+        """
         paragraphs = re.split(r"\.\n|\n\n", text)
         chunks = []
         chunk = ""

@@ -6,31 +6,49 @@ default_template = """Answer the following question based on this context:
 
 Question: {question}
 """
-default_prompt= ChatPromptTemplate.from_template(default_template)
+default_prompt = ChatPromptTemplate.from_template(default_template)
 
 # MULTI-QUERY
-multiquery_template = """You are an AI language model assistant. Your task is to generate five 
+multiquery_template = """You are an AI language model assistant. Your task is to generate {k} 
 different versions of the given user question to retrieve relevant documents from a vector 
 database. By generating multiple perspectives on the user question, your goal is to help
 the user overcome some of the limitations of the distance-based similarity search. 
-Provide these alternative questions separated by newlines. Original question: {question}"""
+Provide these alternative questions separated by newlines. Original question: {question}
+Output ({k} questions):
+1. question#1
+2. question#2
+3. question#3
+...
+Important: Just return questions in the format, do not explain!
+"""
 
 multiquery_prompt = ChatPromptTemplate.from_template(multiquery_template)
 
-#RAG-FUSION
+# RAG-FUSION
 rag_fusion_template = """You are a helpful assistant that generates multiple search queries based on a single input query. \n
 Generate multiple search queries related to: {question} \n
-Output (4 queries):"""
+Output ({k} queries):
+1. query#1
+2. query#2
+3. query#3
+...
+Important: Just return queries in the format, do not explain!
+"""
 rag_fusion_prompt = ChatPromptTemplate.from_template(rag_fusion_template)
 
-#DECOMPOSITION
+# DECOMPOSITION
 decomposition_template = """You are a helpful assistant that generates multiple sub-questions related to an input question. \n
 The goal is to break down the input into a set of sub-problems / sub-questions that can be answers in isolation. \n
 Generate multiple search queries related to: {question} \n
-Output (3 queries):"""
+Output ({k} sub-questions): 
+1. sub-question#1
+2. sub-question#2
+3. sub-question#3
+Important: Just return questions in the format, do not explain!
+"""
 decomposition_prompt = ChatPromptTemplate.from_template(decomposition_template)
 
-recursive_decomposition_template =  """Here is the question you need to answer:
+recursive_decomposition_template = """Here is the question you need to answer:
 
 \n --- \n {question} \n --- \n
 
@@ -45,17 +63,21 @@ Here is additional context relevant to the question:
 Use the above context and any background question + answer pairs to answer the question: \n {question}
 """
 
-recursive_decomposition_prompt = ChatPromptTemplate.from_template(recursive_decomposition_template)
+recursive_decomposition_prompt = ChatPromptTemplate.from_template(
+    recursive_decomposition_template
+)
 
-individual_decomposition_template ="""Here is a set of Q+A pairs:
+individual_decomposition_template = """Here is a set of Q+A pairs:
 
 {context}
 
 Use these to synthesize an answer to the question: {question}
 """
-individual_decomposition_prompt = ChatPromptTemplate.from_template(individual_decomposition_template)
+individual_decomposition_prompt = ChatPromptTemplate.from_template(
+    individual_decomposition_template
+)
 
-#STEP BACK
+# STEP BACK
 examples = [
     {
         "input": "Could the members of The Police perform lawful arrests?",
@@ -99,7 +121,7 @@ generate_prompt_template = """You are an expert of world knowledge. I am going t
 # Answer:"""
 generate_step_back_prompt = ChatPromptTemplate.from_template(generate_prompt_template)
 
-#HyDE
+# HyDE
 hyde_template = """Please write a scientific paper passage to answer the question
 Question: {question}
 Passage:"""

@@ -18,6 +18,7 @@ from typing import Dict
 
 
 def get_retriever(mode: ModeEnum) -> Retriever:
+    """Get retriever from mode"""
     retriever_ = Retriever(vars.llm)
     if mode == ModeEnum.multi_query:
         retriever_ = MultiQuery(vars.llm)
@@ -59,11 +60,13 @@ class Generate(BaseTool):
         return response
 
     def default_generate(self, question):
+        """LLM generate for multi-query, rag-fusion, Stepback, HyDE"""
         input_vars = self.retriever.get_input_vars(question)
         answer = self.chain.invoke(input_vars)
         return answer
 
     def decomposition_generate(self, question):
+        """Generates for Query Decomposition"""
         if self.retriever.decomposition_mode == "recursive":
             questions = self.retriever.generate_queries(question)
             answer = ""
@@ -75,7 +78,7 @@ class Generate(BaseTool):
                 answer = self.chain.invoke(
                     {"question": q, "q_a_pairs": q_a_pairs, "context": context}
                 )
-                q_a_pair = self.retriever.format_qa_pair(q, answer)
+                q_a_pair = self.retriever.format_qa_pairs(q, answer)
                 q_a_pairs = q_a_pairs + "\n---\n" + q_a_pair
             return answer
         else:
