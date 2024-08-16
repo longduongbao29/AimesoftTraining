@@ -44,7 +44,7 @@ class Generate(BaseTool):
     def __init__(self, llm, retriever):
         super().__init__(
             name="Retrieval Tool",
-            description="Retriever docs for pokemon topics",
+            description="Retriever docs for traffic rules",
         )
         self.retriever = retriever
         self.llm = llm

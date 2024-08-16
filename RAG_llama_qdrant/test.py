@@ -1,14 +1,14 @@
-from Rag.answer.answer import Generate
-from Rag.retriever.query_translation import (
-    MultiQuery,
-    RAGFusion,
-    QueryDecompostion,
-    StepBack,
-    HyDE,
-)
-from init import vars
-from Rag.agent.agent import Agent
-from logs.loging import logger
+# from Rag.answer.answer import Generate
+# from Rag.retriever.query_translation import (
+#     MultiQuery,
+#     RAGFusion,
+#     QueryDecompostion,
+#     StepBack,
+#     HyDE,
+# )
+# from init import vars
+# from Rag.agent.agent import Agent
+# from logs.loging import logger
 
 # multi_query = MultiQuery(vars.llm)
 # generate = Generate(vars.llm, multi_query)
@@ -37,9 +37,38 @@ from logs.loging import logger
 # print(agent.run({"input": "What is the weather tommorow in hanoi?"}))
 
 
-from Rag.extract_documents.text_reader import TextReader
-reader = TextReader("data/05_Androgen.pdf","Androgen.pdf")
+import fitz
 
-reader.readpdf()
-chunks = reader.split_text_by_paragraphs(reader.text)
-logger.info({"chunks":chunks})
+my_path = "data/test_rag.pdf"
+doc = fitz.open(my_path)
+blocks = []
+for page in doc:
+    output = page.get_text("blocks")
+    for block in output:
+        if block[6] == 0:
+            # We only take the text
+            text = block[4]
+            if "http://" not in text and "www" not in text and ".com" not in text:
+                blocks.append(block)
+                print(block)
+                print("-" * 80)
+
+# chunks = []
+# prev_block = blocks[0]
+# is_join = False
+# for current_block in blocks[1:]:
+#     if is_join:
+#         prev_block = current_block
+#         is_join = False
+#         continue
+#     if prev_block[0] > current_block[0]:
+#         text = " ".join([prev_block[4], current_block[4]]).replace("\n", " ")
+#         chunks.append(text)
+#         is_join = True
+#     else:
+#         chunks.append(prev_block[4].replace("\n", " "))
+#     prev_block = current_block
+
+# for chunk in chunks:
+#     print(chunk)
+#     print("\n\n")

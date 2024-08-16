@@ -33,4 +33,13 @@ class Agent:
         )
 
     def run(self, input):
+        """
+        Executes the agent with the given input and returns the result.
+
+        Parameters:
+        input (str): The user's question or instruction. The agent will use this input to determine the appropriate tool or action.
+
+        Returns:
+        str: The result of executing the agent. This could be the output of a tool, a final answer, or an error message.
+        """
         return self.agent_executor.invoke(input)

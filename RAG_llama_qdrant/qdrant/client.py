@@ -63,7 +63,7 @@ class Qdrant_Client:
             text (str): input text
             title (str): title of document
         """
-        docs = text.create_document()
+        docs = text.create_documents()
         self.vectorstore.add_documents(docs)
 
     def retriever_map(self, queries: list[str]) -> list[list]:
