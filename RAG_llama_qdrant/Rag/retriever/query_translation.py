@@ -8,6 +8,8 @@ from langchain.prompts import ChatPromptTemplate
 from typing import List
 from logs.loging import logger
 
+1
+
 
 class Retriever(BaseRetriever):
     model: BaseLanguageModel = None
@@ -257,6 +259,18 @@ class StepBack(Retriever):
         self.generate_prompt = templates.generate_step_back_prompt
 
     def get_input_vars(self, question: str):
+        """
+        Generate input variables for the prompt based on the given question.
+
+        Parameters:
+        question (str): The question to retrieve related documents and generate context.
+
+        Returns:
+        dict: A dictionary containing the input variables for the prompt. The dictionary includes:
+            - "normal_context": The context derived from the most relevant documents retrieved for the question.
+            - "step_back_context": The context derived from the documents retrieved for the generated queries.
+            - "question": The original question.
+        """
         normal_context = self.get_context(
             self.get_page_contents(self._get_relevant_documents(question))
         )

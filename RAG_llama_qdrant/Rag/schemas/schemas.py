@@ -1,10 +1,9 @@
 from pydantic import BaseModel, Field
-from fastapi import UploadFile, File
-from typing import List
 from enum import Enum
 
 
 class ModeEnum(str, Enum):
+    default = "default"
     multi_query = "multi-query"
     rag_fusion = "rag-fusion"
     recursive_decomposition = "recursive-decompostion"
@@ -19,3 +18,8 @@ class Question(BaseModel):
 
 class RetrieverSchema(BaseModel):
     mode: ModeEnum
+
+
+class AskRequest(BaseModel):
+    question: Question
+    retrieval_schema: RetrieverSchema

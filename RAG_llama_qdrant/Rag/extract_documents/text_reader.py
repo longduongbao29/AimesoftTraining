@@ -1,23 +1,36 @@
+from click import prompt
 from langchain_core.documents import Document
-from langchain_text_splitters import TextSplitter
 import fitz
 from logs.loging import logger
-from typing import List
 import re
+from langchain_core.output_parsers import StrOutputParser
+from langchain.prompts import ChatPromptTemplate
 
 MAX_CHUNK_SIZE = 1000
+
+prompt = ChatPromptTemplate.from_template(
+    """From input document, find the topic of document. Topic return needs to be specified, short.
+                                          Document: 
+                                          {document}
+                                          Output (topic 1-5 word):
+                                          """
+)
 
 
 class TextReader:
     doc_name: str = None
     file_path: str = None
-    text: str = None
+    text: str = ""
     blocks: list = []
 
     def __init__(self, file_path, doc_name):
         self.doc_name = doc_name
         self.file_path = file_path
-        self.text = str
+
+    def get_topics(self, llm):
+        chain = prompt | llm | StrOutputParser()
+        topic = chain.invoke({"document": self.text})
+        return topic
 
     def readpdf(self):
         """
@@ -49,13 +62,15 @@ class TextReader:
                     ):
                         blocks.append(block)
         self.blocks = blocks
+        text_blocks = [block[4] for block in blocks]
+        self.text = "\n".join(text_blocks)
 
     def create_documents(self):
         """Split and create documents from text"""
         documents = []
         chunks = []
         if "txt" in self.file_path:
-            chunks = self.split_txt_by_paragraphs(self.text)
+            chunks = self.split_txt_by_paragraphs()
         else:
             chunks = self.split_pdf_by_paragraphs()
         for chunk in chunks:
@@ -65,7 +80,7 @@ class TextReader:
             documents.append(document)
         return documents
 
-    def split_txt_by_paragraphs(self, text):
+    def split_txt_by_paragraphs(self):
         """Split text by paragraphs by .\n or \n\n
 
         Args:
@@ -74,7 +89,7 @@ class TextReader:
         Returns:
             list: chunks
         """
-        paragraphs = re.split(r"\.\n|\n\n", text)
+        paragraphs = re.split(r"\.\n|\n\n", self.text)
         chunks = []
         chunk = ""
         for paragraph in paragraphs:
@@ -91,7 +106,7 @@ class TextReader:
 
     def split_pdf_by_paragraphs(self):
         """
-        Splits the text blocks extracted from a PDF into paragraphs.
+        Splits the self. blocks extracted from a PDF into paragraphs.
 
         This function processes the text blocks stored in the `blocks` attribute,
         joining blocks that are part of the same paragraph and splitting them into

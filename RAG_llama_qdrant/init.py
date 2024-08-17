@@ -3,6 +3,7 @@ from langchain_groq import ChatGroq
 from Rag.config.config import Config
 from langchain_community.embeddings.fastembed import FastEmbedEmbeddings
 
+
 config = Config()
 
 

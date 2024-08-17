@@ -37,21 +37,21 @@
 # print(agent.run({"input": "What is the weather tommorow in hanoi?"}))
 
 
-import fitz
+# import fitz
 
-my_path = "data/test_rag.pdf"
-doc = fitz.open(my_path)
-blocks = []
-for page in doc:
-    output = page.get_text("blocks")
-    for block in output:
-        if block[6] == 0:
-            # We only take the text
-            text = block[4]
-            if "http://" not in text and "www" not in text and ".com" not in text:
-                blocks.append(block)
-                print(block)
-                print("-" * 80)
+# my_path = "data/test_rag.pdf"
+# doc = fitz.open(my_path)
+# blocks = []
+# for page in doc:
+#     output = page.get_text("blocks")
+#     for block in output:
+#         if block[6] == 0:
+#             # We only take the text
+#             text = block[4]
+#             if "http://" not in text and "www" not in text and ".com" not in text:
+#                 blocks.append(block)
+#                 print(block)
+#                 print("-" * 80)
 
 # chunks = []
 # prev_block = blocks[0]

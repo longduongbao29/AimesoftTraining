@@ -1,3 +1,5 @@
+from venv import logger
+from joblib import Logger
 from Rag.retriever.query_translation import (
     Retriever,
     MultiQuery,
@@ -44,12 +46,16 @@ class Generate(BaseTool):
     def __init__(self, llm, retriever):
         super().__init__(
             name="Retrieval Tool",
-            description="Retriever docs for traffic rules",
+            description="Documents for following topics:\n",
         )
         self.retriever = retriever
         self.llm = llm
         self.prompt = retriever.generate_prompt
         self.chain = self.prompt | self.llm | StrOutputParser()
+
+    def update_description(self, topic):
+        self.description += f", {topic}"
+        logger.info({"description": self.description})
 
     def _run(self, question: str):
         response = None
@@ -66,7 +72,7 @@ class Generate(BaseTool):
         return answer
 
     def decomposition_generate(self, question):
-        """Generates for Query Decomposition"""
+        """Generate for Query Decomposition"""
         if self.retriever.decomposition_mode == "recursive":
             questions = self.retriever.generate_queries(question)
             answer = ""

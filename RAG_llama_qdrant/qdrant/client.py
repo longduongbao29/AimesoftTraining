@@ -79,3 +79,4 @@ class Qdrant_Client:
             response = self.retriever(query)
             docs.append(response)
         return docs
+        
