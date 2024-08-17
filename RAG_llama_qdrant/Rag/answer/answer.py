@@ -46,16 +46,20 @@ class Generate(BaseTool):
     def __init__(self, llm, retriever):
         super().__init__(
             name="Retrieval Tool",
-            description="Documents for following topics:\n",
+            description="",
         )
         self.retriever = retriever
         self.llm = llm
         self.prompt = retriever.generate_prompt
         self.chain = self.prompt | self.llm | StrOutputParser()
 
-    def update_description(self, topic):
-        self.description += f", {topic}"
-        logger.info({"description": self.description})
+    def update_description(self, client):
+        collections = client.get_collections().collections
+        collection_names = [collection.name for collection in collections]
+        self.description = "Documents for following topics: " + ", ".join(
+            collection_names
+        )
+        # logger.output({"description": self.description})
 
     def _run(self, question: str):
         response = None

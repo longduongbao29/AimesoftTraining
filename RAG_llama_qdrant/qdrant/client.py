@@ -22,24 +22,46 @@ class Qdrant_Client:
             api_key=self.api_key,
         )
         self.text_splitter = CharacterTextSplitter(chunk_size=100, chunk_overlap=0)
+        self.vectorstores = []
+        try:
+            collections = self.client.get_collections().collections
+            for collection in collections:
+                vtst = QdrantVectorStore(
+                    client=self.client,
+                    collection_name=collection.name,
+                    embedding=self.embeddings,
+                )
+                self.vectorstores.append(vtst)
+            print(f"Initialized with {len(self.vectorstores)} collections")
+        except Exception as e:
+            print("Exception: ", e)
+
+    def create_collection(self, colection_name):
+        """Create Qdrant collection"""
+        new_vtstr = QdrantVectorStore
         try:
             self.client.create_collection(
-                collection_name="docs",
+                collection_name=colection_name,
                 vectors_config=VectorParams(size=384, distance=Distance.COSINE),
             )
-            self.vectorstore = QdrantVectorStore(
+            new_vtstr = QdrantVectorStore(
                 client=self.client,
-                collection_name="docs",
-                embedding=embeddings,
+                collection_name=colection_name,
+                embedding=self.embeddings,
             )
+            self.vectorstores.append(new_vtstr)
         except Exception as e:
+            print(f"Failed to create collection: {str(e)}")
             print("Init from existing collection")
-            self.vectorstore = QdrantVectorStore.from_existing_collection(
+            new_vtstr = QdrantVectorStore.from_existing_collection(
                 url=self.url,
                 api_key=self.api_key,
-                embedding=embeddings,
-                collection_name="docs",
+                embedding=self.embeddings,
+                collection_name=colection_name,
             )
+            self.vectorstores.append()
+
+        return new_vtstr
 
     def retriever(self, text: str, k=3):
         """Get k relevant documents to given input text
@@ -53,10 +75,14 @@ class Qdrant_Client:
         """
         if len(text) == 0:
             return []
-        docs = self.vectorstore.similarity_search(query=text, k=k)
+        docs = []
+        for vt in self.vectorstores:
+            docs_ = vt.similarity_search(query=text, k=k)
+            for doc in docs_:
+                docs.append(doc)
         return docs
 
-    def upload_from_text(self, text: TextReader):
+    def upload_from_text(self, text: TextReader, topic: str):
         """From input text, chunking and saving to Qdrant collection
 
         Args:
@@ -64,7 +90,8 @@ class Qdrant_Client:
             title (str): title of document
         """
         docs = text.create_documents()
-        self.vectorstore.add_documents(docs)
+        vtstr = self.create_collection(topic)
+        vtstr.add_documents(docs)
 
     def retriever_map(self, queries: list[str]) -> list[list]:
         """From input queries, get relevant documents
@@ -79,4 +106,3 @@ class Qdrant_Client:
             response = self.retriever(query)
             docs.append(response)
         return docs
-        

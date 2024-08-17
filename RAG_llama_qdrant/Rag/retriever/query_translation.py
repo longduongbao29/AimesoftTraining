@@ -31,7 +31,7 @@ class Retriever(BaseRetriever):
         List[Document]: A list of documents related to the question.
 
         """
-        self.docs = vars.qdrant_client.vectorstore.similarity_search(query=question)
+        self.docs = vars.qdrant_client.retriever(text=question)
         return self.docs[: self.k]
 
     def remove_duplicates(self, documents):
@@ -115,7 +115,7 @@ class Retriever(BaseRetriever):
             | (lambda x: x.split("\n"))
         )
         queries = chain.invoke({"question": question, "k": k})
-        logger.info({"queries": queries[-k:]})
+        logger.output({"queries": queries[-k:]})
         return queries[-k:]
 
 
@@ -224,7 +224,7 @@ class QueryDecompostion(Retriever):
 
         formatted_string = ""
         formatted_string += f"Question: {question}\nAnswer: {answer}\n\n"
-        logger.info(formatted_string.strip())
+        logger.output({"Q&A":formatted_string.strip()})
         return formatted_string.strip()
 
     def retrieve_and_rag(self, question, prompt_rag, sub_question_generator_chain):
@@ -279,7 +279,7 @@ class StepBack(Retriever):
         step_back_docs = self.flatten_docs(step_back_docs)
         docs_content = self.get_page_contents(step_back_docs)
         step_back_context = self.get_context(docs_content)
-        logger.info(
+        logger.output(
             {"normal context": normal_context, "step_back_context": step_back_context}
         )
         input_vars = {
@@ -303,6 +303,6 @@ class HyDE(Retriever):
 
     def _get_relevant_documents(self, question):
         docs_for_retrieval = self.generate_docs(question)
-        logger.info({"docs Hyde": docs_for_retrieval})
+        logger.output({"docs Hyde": docs_for_retrieval})
         self.docs = super()._get_relevant_documents(docs_for_retrieval)
         return self.docs[: self.k]
