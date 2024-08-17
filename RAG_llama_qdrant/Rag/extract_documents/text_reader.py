@@ -89,7 +89,7 @@ class TextReader:
         Returns:
             list: chunks
         """
-        paragraphs = re.split(r"\.\n|\n\n", self.text)
+        paragraphs = re.split(r"\n", self.text)
         chunks = []
         chunk = ""
         for paragraph in paragraphs:
