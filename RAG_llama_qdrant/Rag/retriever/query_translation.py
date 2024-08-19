@@ -7,8 +7,7 @@ from langchain_core.language_models.base import BaseLanguageModel
 from langchain.prompts import ChatPromptTemplate
 from typing import List
 from logs.loging import logger
-
-1
+from langchain_community.retrievers import BM25Retriever
 
 
 class Retriever(BaseRetriever):
@@ -224,7 +223,7 @@ class QueryDecompostion(Retriever):
 
         formatted_string = ""
         formatted_string += f"Question: {question}\nAnswer: {answer}\n\n"
-        logger.output({"Q&A":formatted_string.strip()})
+        logger.output({"Q&A": formatted_string.strip()})
         return formatted_string.strip()
 
     def retrieve_and_rag(self, question, prompt_rag, sub_question_generator_chain):
@@ -306,3 +305,40 @@ class HyDE(Retriever):
         logger.output({"docs Hyde": docs_for_retrieval})
         self.docs = super()._get_relevant_documents(docs_for_retrieval)
         return self.docs[: self.k]
+
+
+class Bm25(Retriever):
+    def _get_relevant_documents(self, question):
+        from langchain_community.retrievers import BM25Retriever
+
+        retriever = BM25Retriever.from_documents(self.get_documents())
+        self.docs = retriever.invoke(question)
+        return self.docs[: self.k]
+
+    def get_documents(self):
+        client = vars.qdrant_client.client
+        collections = client.get_collections().collections
+        docs = []
+        for collection in collections:
+            collection_name = collection.name
+            page_size = 100
+            offset = 0
+            while True:
+                response = client.scroll(
+                    collection_name=collection_name,
+                    limit=page_size,
+                    offset=offset,
+                )
+                for r in response[0]:
+                    data = r.payload
+                    doc = Document(
+                        metadata=data["metadata"], page_content=data["page_content"]
+                    )
+                    docs.append(doc)
+                # Nếu số lượng documents trả về ít hơn page_size thì dừng lại
+                if len(response[0]) < page_size:
+                    break
+
+                # Tăng offset cho lần lặp tiếp theo
+                offset += page_size
+        return docs

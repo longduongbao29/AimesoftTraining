@@ -1,6 +1,7 @@
 from venv import logger
 from joblib import Logger
 from Rag.retriever.query_translation import (
+    Bm25,
     Retriever,
     MultiQuery,
     RAGFusion,
@@ -34,6 +35,8 @@ def get_retriever(mode: ModeEnum) -> Retriever:
         retriever_ = StepBack(vars.llm)
     elif mode == ModeEnum.hyde:
         retriever_ = HyDE(vars.llm)
+    elif mode == ModeEnum.bm25:
+        retriever_ = Bm25(vars.llm)
     return retriever_
 
 

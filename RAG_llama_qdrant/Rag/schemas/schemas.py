@@ -10,7 +10,7 @@ class ModeEnum(str, Enum):
     individual_decomposition = "individual-decomposition"
     step_back = "step-back"
     hyde = "hyde"
-
+    bm25 = "bm25"
 
 class Question(BaseModel):
     question: str = Field(examples=["What is your name?"])

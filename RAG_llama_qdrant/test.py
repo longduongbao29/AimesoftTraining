@@ -35,40 +35,38 @@
 # multi_query = MultiQuery(vars.llm)
 # agent = Agent(llm=vars.llm, retriever=multi_query)
 # print(agent.run({"input": "What is the weather tommorow in hanoi?"}))
+from init import vars
+from langchain_core.documents import Document
+from logs.loging import logger
 
 
-# import fitz
+def get_documents():
+    client = vars.qdrant_client.client
+    collections = client.get_collections().collections
+    docs = []
+    for collection in collections:
+        collection_name = collection.name
+        page_size = 100
+        offset = 0
+        while True:
+            response = client.scroll(
+                collection_name=collection_name,
+                limit=page_size,
+                offset=offset,
+            )
+            for r in response[0]:
+                data = r.payload
+                doc = Document(
+                    metadata=data["metadata"], page_content=data["page_content"]
+                )
+                docs.append(doc)
+            # Nếu số lượng documents trả về ít hơn page_size thì dừng lại
+            if len(response[0]) < page_size:
+                break
 
-# my_path = "data/test_rag.pdf"
-# doc = fitz.open(my_path)
-# blocks = []
-# for page in doc:
-#     output = page.get_text("blocks")
-#     for block in output:
-#         if block[6] == 0:
-#             # We only take the text
-#             text = block[4]
-#             if "http://" not in text and "www" not in text and ".com" not in text:
-#                 blocks.append(block)
-#                 print(block)
-#                 print("-" * 80)
+            # Tăng offset cho lần lặp tiếp theo
+            offset += page_size
+    return docs
 
-# chunks = []
-# prev_block = blocks[0]
-# is_join = False
-# for current_block in blocks[1:]:
-#     if is_join:
-#         prev_block = current_block
-#         is_join = False
-#         continue
-#     if prev_block[0] > current_block[0]:
-#         text = " ".join([prev_block[4], current_block[4]]).replace("\n", " ")
-#         chunks.append(text)
-#         is_join = True
-#     else:
-#         chunks.append(prev_block[4].replace("\n", " "))
-#     prev_block = current_block
 
-# for chunk in chunks:
-#     print(chunk)
-#     print("\n\n")
+logger.output(get_documents())
