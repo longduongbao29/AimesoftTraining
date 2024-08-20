@@ -1,3 +1,4 @@
+from typing import List
 from pydantic import BaseModel, Field
 from enum import Enum
 
@@ -12,12 +13,13 @@ class ModeEnum(str, Enum):
     hyde = "hyde"
     bm25 = "bm25"
 
+
 class Question(BaseModel):
     question: str = Field(examples=["What is your name?"])
 
 
 class RetrieverSchema(BaseModel):
-    mode: ModeEnum
+    mode: List[ModeEnum]
 
 
 class AskRequest(BaseModel):

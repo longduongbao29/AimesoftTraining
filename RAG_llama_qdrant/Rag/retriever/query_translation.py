@@ -1,3 +1,4 @@
+from mimetypes import init
 import Rag.retriever.templates as templates
 from langchain_core.output_parsers import StrOutputParser
 from langchain.load import dumps, loads
@@ -8,13 +9,14 @@ from langchain.prompts import ChatPromptTemplate
 from typing import List
 from logs.loging import logger
 from langchain_community.retrievers import BM25Retriever
+from Rag.schemas.schemas import ModeEnum
 
 
 class Retriever(BaseRetriever):
     model: BaseLanguageModel = None
     generate_prompt: ChatPromptTemplate = templates.default_prompt
     query_generate_prompt: ChatPromptTemplate = None
-    docs: List[Document] = None
+    docs: List[Document] = []
     k: int = 5
 
     def __init__(self, model, **kwargs):
@@ -146,38 +148,6 @@ class RAGFusion(Retriever):
         self.query_generate_prompt = templates.rag_fusion_prompt
         self.generate_prompt = templates.default_prompt
 
-    def reciprocal_rank_fusion(self, results, k=60):
-        """Reciprocal_rank_fusion that takes multiple lists of ranked documents
-        and an optional parameter k used in the RRF formula"""
-
-        # Initialize a dictionary to hold fused scores for each unique document
-        fused_scores = {}
-
-        # Iterate through each list of ranked documents
-        for docs in results:
-            # Iterate through each document in the list, with its rank (position in the list)
-            for rank, doc in enumerate(docs):
-                # Convert the document to a string format to use as a key (assumes documents can be serialized to JSON)
-                doc_str = dumps(doc)
-                # If the document is not yet in the fused_scores dictionary, add it with an initial score of 0
-                if doc_str not in fused_scores:
-                    fused_scores[doc_str] = 0
-                # Retrieve the current score of the document, if any
-                previous_score = fused_scores[doc_str]
-                # Update the score of the document using the RRF formula: 1 / (rank + k)
-                fused_scores[doc_str] += 1 / (rank + k)
-
-        # Sort the documents based on their fused scores in descending order to get the final reranked results
-        reranked_results = [
-            (loads(doc), score)
-            for doc, score in sorted(
-                fused_scores.items(), key=lambda x: x[1], reverse=True
-            )
-        ]
-
-        # Return the reranked results as a list of tuples, each containing the document and its fused score
-        return reranked_results
-
     def _get_relevant_documents(self, question: str):
         """
         Retrieve documents related to the question using the Qdrant client with rerank documents.
@@ -188,7 +158,7 @@ class RAGFusion(Retriever):
         """
         queries = self.generate_queries(question)
         docs = vars.qdrant_client.retriever_map(queries)
-        self.docs = self.reciprocal_rank_fusion(docs)
+        self.docs = reciprocal_rank_fusion(docs)
         return self.docs[: self.k]
 
     def get_input_vars(self, question: str):
@@ -342,3 +312,77 @@ class Bm25(Retriever):
                 # Tăng offset cho lần lặp tiếp theo
                 offset += page_size
         return docs
+
+
+def reciprocal_rank_fusion(results, k=60):
+    """Reciprocal_rank_fusion that takes multiple lists of ranked documents
+    and an optional parameter k used in the RRF formula"""
+
+    # Initialize a dictionary to hold fused scores for each unique document
+    fused_scores = {}
+
+    # Iterate through each list of ranked documents
+    for docs in results:
+        # Iterate through each document in the list, with its rank (position in the list)
+        for rank, doc in enumerate(docs):
+            # Convert the document to a string format to use as a key (assumes documents can be serialized to JSON)
+            doc_str = dumps(doc)
+            # If the document is not yet in the fused_scores dictionary, add it with an initial score of 0
+            if doc_str not in fused_scores:
+                fused_scores[doc_str] = 0
+            # Retrieve the current score of the document, if any
+            previous_score = fused_scores[doc_str]
+            # Update the score of the document using the RRF formula: 1 / (rank + k)
+            fused_scores[doc_str] += 1 / (rank + k)
+
+    # Sort the documents based on their fused scores in descending order to get the final reranked results
+    reranked_results = [
+        (loads(doc), score)
+        for doc, score in sorted(fused_scores.items(), key=lambda x: x[1], reverse=True)
+    ]
+
+    # Return the reranked results as a list of tuples, each containing the document and its fused score
+    return reranked_results
+
+
+def get_retriever(mode: ModeEnum) -> Retriever:
+    """Get retriever from mode"""
+    retriever_ = Retriever(vars.llm)
+    if mode == ModeEnum.multi_query:
+        retriever_ = MultiQuery(vars.llm)
+    elif mode == ModeEnum.rag_fusion:
+        retriever_ = RAGFusion(vars.llm)
+    elif mode == ModeEnum.recursive_decomposition:
+        retriever_ = QueryDecompostion(vars.llm, mode="recursive")
+    elif mode == ModeEnum.individual_decomposition:
+        retriever_ = QueryDecompostion(vars.llm, mode="individual")
+    elif mode == ModeEnum.step_back:
+        retriever_ = StepBack(vars.llm)
+    elif mode == ModeEnum.hyde:
+        retriever_ = HyDE(vars.llm)
+    elif mode == ModeEnum.bm25:
+        retriever_ = Bm25(vars.llm)
+    return retriever_
+
+
+def get_multiple_retriever(mode: List[ModeEnum]) -> List[Retriever]:
+    """Get multiple retrievers from modes"""
+    retrievers = []
+    for mode in mode:
+        retrievers.append(get_retriever(mode))
+    return retrievers
+
+
+class MultipleRetriever(Retriever):
+    retriever_methods: List[Retriever] = []
+
+    def __init__(self, model, retriever_methods) -> None:
+        super().__init__(model)
+        self.retriever_methods = retriever_methods
+
+    def _get_relevant_documents(self, question):
+        docs_ = []
+        for retriever in self.retriever_methods:
+            docs_.append(retriever._get_relevant_documents(question))
+        self.docs = reciprocal_rank_fusion(docs_)
+        return self.docs[: self.k]

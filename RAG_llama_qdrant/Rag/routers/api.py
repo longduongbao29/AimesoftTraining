@@ -1,6 +1,6 @@
 from fastapi.responses import HTMLResponse
 from Rag.schemas.schemas import RetrieverSchema, Question
-from Rag.answer.answer import get_retriever
+from Rag.retriever.query_translation import MultipleRetriever, get_multiple_retriever
 from Rag.agent.agent import Agent
 from Rag.retriever.query_translation import Retriever
 from init import vars
@@ -37,7 +37,9 @@ def retriever(question: Question, mode: RetrieverSchema):
     """
     try:
         question = question.question
-        retriever = get_retriever(mode.mode)
+        retriever = MultipleRetriever(
+            model=vars.llm, retriever_methods=get_multiple_retriever(mode.mode)
+        )
         docs = retriever.invoke(question)
     except Exception as e:
         return {"message": f"Failed to retrieve documents: {str(e)}"}
@@ -58,10 +60,11 @@ async def model_predict(question: Question, retrieval_schema: RetrieverSchema):
     """
     try:
         question = question.question
-        retriever_ = get_retriever(retrieval_schema.mode)
-        agent.retriever_tool.update_description(vars.qdrant_client.client)
+        retriever_ = get_multiple_retriever(retrieval_schema.mode)
+        agent.update_description_retriever_tool(vars.qdrant_client.client)
         agent.retriever = retriever_
         answer = agent.run({"input": question})
+        logger.output({"question": question, "answer": answer})
     except Exception as e:
         return {"message": f"Failed to generate answer: {str(e)}"}
     return answer

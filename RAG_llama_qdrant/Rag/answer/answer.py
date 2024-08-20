@@ -9,7 +9,7 @@ from Rag.retriever.query_translation import (
     StepBack,
     HyDE,
 )
-from Rag.schemas.schemas import ModeEnum
+
 from langchain import hub
 from langchain_core.output_parsers import StrOutputParser
 from init import vars
@@ -20,49 +20,19 @@ from langchain_core.runnables.base import RunnableSerializable
 from typing import Dict
 
 
-def get_retriever(mode: ModeEnum) -> Retriever:
-    """Get retriever from mode"""
-    retriever_ = Retriever(vars.llm)
-    if mode == ModeEnum.multi_query:
-        retriever_ = MultiQuery(vars.llm)
-    elif mode == ModeEnum.rag_fusion:
-        retriever_ = RAGFusion(vars.llm)
-    elif mode == ModeEnum.recursive_decomposition:
-        retriever_ = QueryDecompostion(vars.llm, mode="recursive")
-    elif mode == ModeEnum.individual_decomposition:
-        retriever_ = QueryDecompostion(vars.llm, mode="individual")
-    elif mode == ModeEnum.step_back:
-        retriever_ = StepBack(vars.llm)
-    elif mode == ModeEnum.hyde:
-        retriever_ = HyDE(vars.llm)
-    elif mode == ModeEnum.bm25:
-        retriever_ = Bm25(vars.llm)
-    return retriever_
 
 
-class Generate(BaseTool):
+class Generate():
     retriever: Retriever = None
     llm: BaseLanguageModel = None
     prompt: ChatPromptTemplate = None
     chain: RunnableSerializable[Dict, str] = None
 
     def __init__(self, llm, retriever):
-        super().__init__(
-            name="Retrieval Tool",
-            description="",
-        )
         self.retriever = retriever
         self.llm = llm
         self.prompt = retriever.generate_prompt
         self.chain = self.prompt | self.llm | StrOutputParser()
-
-    def update_description(self, client):
-        collections = client.get_collections().collections
-        collection_names = [collection.name for collection in collections]
-        self.description = "Documents for following topics: " + ", ".join(
-            collection_names
-        )
-        # logger.output({"description": self.description})
 
     def _run(self, question: str):
         response = None
